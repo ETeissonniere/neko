@@ -39,11 +39,10 @@ const main = async () => {
           demandOption: true,
         }),
       handler: async (argv: Arguments) => {
+        const buffer = [];
         const api = await (new SubstrateBuilder(argv.url)).build();
-        await api.fetchTransfers(argv.start, argv.end, (block, transfer) => {
-          log.debug(
-            `${block}: ${transfer.from} -> ${transfer.to} (${transfer.amount})`,
-          );
+        await api.fetchTransfers(argv.start, argv.end, (_block, transfer) => {
+          buffer.push(transfer);
         });
 
         Deno.exit(0);

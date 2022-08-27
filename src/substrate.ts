@@ -2,7 +2,7 @@ import {
   ApiPromise,
   WsProvider,
 } from "https://deno.land/x/polkadot@0.0.6/api/index.ts";
-import * as log from "https://deno.land/std/log/mod.ts";
+import ProgressBar from "https://deno.land/x/progress@v1.2.7/mod.ts";
 
 interface FetchTransfersCallback {
   (block: number, event: TransferEvent): void;
@@ -17,6 +17,23 @@ export type TransferEvent = {
 // deno-lint-ignore no-explicit-any
 const asNumber = (nb: any) => {
   return parseInt(nb.toString());
+};
+
+const emoji = (ticker: number) => {
+  const emojis = [
+    "🐱",
+    "🐈",
+    "🐯",
+    "🦁",
+    "🐅",
+    "🐆",
+    "🐴",
+    "🦄",
+    "😈",
+    "🐶",
+    "🔮",
+  ];
+  return emojis[ticker % emojis.length];
 };
 
 export class Substrate {
@@ -37,8 +54,15 @@ export class Substrate {
     endBlock: number,
     cb: FetchTransfersCallback,
   ): Promise<void> {
+    const total = endBlock - startBlock;
+    const progress = new ProgressBar({
+      title: emoji(0),
+      total,
+      display: ":title :completed/:total :bar eta :eta",
+    });
+    let completed = 0;
+
     const decimals = await this.decimals();
-    log.info(`decimals: ${decimals}`);
 
     for (let i = startBlock; i <= endBlock; i++) {
       const blockHash = await this.api.rpc.chain.getBlockHash(i);
@@ -58,6 +82,8 @@ export class Substrate {
           cb(i, transfer);
         }
       });
+
+      progress.render(completed++, { title: emoji(Math.round(completed / 10)) });
     }
   }
 }
