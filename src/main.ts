@@ -48,6 +48,7 @@ const main = () => {
           ...buffer.map((t) => [t.from, t.to, t.amount.toString()]),
         ];
         writeCSV(f, dump);
+        f.close();
 
         Deno.exit(0);
       },
