@@ -14,4 +14,4 @@ cache:
 	deno cache src/*.ts
 
 fmt:
-	deno fmt 
+	deno fmt
