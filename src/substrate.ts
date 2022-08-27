@@ -12,6 +12,7 @@ export type TransferEvent = {
   from: string;
   to: string;
   amount: number;
+  block: number;
 };
 
 // deno-lint-ignore no-explicit-any
@@ -78,6 +79,7 @@ export class Substrate {
             from: from.toString(),
             to: to.toString(),
             amount: asNumber(amount) / Math.pow(10, decimals),
+            block: i,
           };
           cb(i, transfer);
         }

@@ -44,10 +44,13 @@ const main = () => {
           truncate: true,
         });
         const dump = [
-          ["from", "to", "amount"],
-          ...buffer.map((t) => [t.from, t.to, t.amount.toString()]),
+          ["block", "from", "to", "amount"],
+          ...buffer.map((
+            t,
+          ) => [t.block.toString(), t.from, t.to, t.amount.toString()]),
         ];
-        writeCSV(f, dump);
+        console.log(dump);
+        await writeCSV(f, dump);
         f.close();
 
         Deno.exit(0);
