@@ -4,7 +4,19 @@ import * as log from "https://deno.land/std/log/mod.ts";
 
 import { SubstrateBuilder } from "./substrate.ts";
 
-const main = () => {
+const main = async () => {
+  await log.setup({
+    handlers: {
+      console: new log.handlers.ConsoleHandler("DEBUG"),
+    },
+    loggers: {
+      default: {
+        level: "DEBUG",
+        handlers: ["console"],
+      },
+    },
+  });
+
   yargs(Deno.args)
     .command({
       command: "fetch",
@@ -17,11 +29,22 @@ const main = () => {
           type: "string",
           description: "node url to connect to",
           demandOption: true,
+        }).option("start", {
+          type: "number",
+          description: "start block",
+          demandOption: true,
+        }).option("end", {
+          type: "number",
+          description: "end block",
+          demandOption: true,
         }),
       handler: async (argv: Arguments) => {
         const api = await (new SubstrateBuilder(argv.url)).build();
-        const now = await api.currentBlock();
-        log.info(`Current last block: ${now}`);
+        await api.fetchTransfers(argv.start, argv.end, (block, transfer) => {
+          log.debug(
+            `${block}: ${transfer.from} -> ${transfer.to} (${transfer.amount})`,
+          );
+        });
 
         Deno.exit(0);
       },
@@ -29,4 +52,4 @@ const main = () => {
     .parse();
 };
 
-main();
+main().catch(log.error);

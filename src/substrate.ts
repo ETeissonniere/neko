@@ -2,6 +2,17 @@ import {
   ApiPromise,
   WsProvider,
 } from "https://deno.land/x/polkadot@0.0.6/api/index.ts";
+import * as log from "https://deno.land/std/log/mod.ts";
+
+interface FetchTransfersCallback {
+  (block: number, event: TransferEvent): void;
+}
+
+export type TransferEvent = {
+  from: string;
+  to: string;
+  amount: number;
+};
 
 // deno-lint-ignore no-explicit-any
 const asNumber = (nb: any) => {
@@ -15,9 +26,39 @@ export class Substrate {
     this.api = api;
   }
 
-  public async currentBlock(): Promise<number> {
-    const block = await this.api.query.system.number();
-    return asNumber(block);
+  public async decimals(): Promise<number> {
+    const properties = await this.api.rpc.system.properties();
+    const decimals = properties.tokenDecimals.unwrapOr([12])[0];
+    return asNumber(decimals);
+  }
+
+  public async fetchTransfers(
+    startBlock: number,
+    endBlock: number,
+    cb: FetchTransfersCallback,
+  ): Promise<void> {
+    const decimals = await this.decimals();
+    log.info(`decimals: ${decimals}`);
+
+    for (let i = startBlock; i <= endBlock; i++) {
+      const blockHash = await this.api.rpc.chain.getBlockHash(i);
+      const record = await this.api.derive.tx.events(blockHash);
+
+      record.events.forEach((evt) => {
+        const { event } = evt;
+
+        const eventName = `${event.section}.${event.method}`;
+        if (eventName === "balances.Transfer") {
+          const [from, to, amount] = event.data;
+          const transfer = {
+            from: from.toString(),
+            to: to.toString(),
+            amount: asNumber(amount) / Math.pow(10, decimals),
+          };
+          cb(i, transfer);
+        }
+      });
+    }
   }
 }
 
