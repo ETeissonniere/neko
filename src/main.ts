@@ -1,23 +1,10 @@
 import yargs from "https://deno.land/x/yargs/deno.ts";
 import { Arguments } from "https://deno.land/x/yargs/deno-types.ts";
-import * as log from "https://deno.land/std/log/mod.ts";
 import { writeCSV } from "https://deno.land/x/csv/mod.ts";
 
 import { SubstrateBuilder, TransferEvent } from "./substrate.ts";
 
-const main = async () => {
-  await log.setup({
-    handlers: {
-      console: new log.handlers.ConsoleHandler("DEBUG"),
-    },
-    loggers: {
-      default: {
-        level: "DEBUG",
-        handlers: ["console"],
-      },
-    },
-  });
-
+const main = () => {
   yargs(Deno.args)
     .command({
       command: "fetch",
@@ -68,4 +55,4 @@ const main = async () => {
     .parse();
 };
 
-main().catch(log.error);
+main();
