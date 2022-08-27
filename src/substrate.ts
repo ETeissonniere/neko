@@ -83,7 +83,9 @@ export class Substrate {
         }
       });
 
-      progress.render(completed++, { title: emoji(Math.round(completed / 10)) });
+      progress.render(completed++, {
+        title: emoji(Math.round(completed / 10)),
+      });
     }
   }
 }
