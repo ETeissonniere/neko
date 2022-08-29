@@ -4,8 +4,8 @@ import { writeCSV } from "https://deno.land/x/csv/mod.ts";
 
 import { SubstrateBuilder, TransferEvent } from "./substrate.ts";
 
-const main = () => {
-  yargs(Deno.args)
+const main = async () => {
+  await yargs(Deno.args)
     .command({
       command: "fetch",
       describe:
@@ -52,12 +52,27 @@ const main = () => {
         console.log(dump);
         await writeCSV(f, dump);
         f.close();
-
-        Deno.exit(0);
+      },
+    })
+    .command({
+      command: "now",
+      describe:
+        "connect to a substrate chain and fetch the last known block number",
+      // deno-lint-ignore no-explicit-any
+      builder: (y: any) =>
+        y.option("url", {
+          alias: "u",
+          type: "string",
+          description: "node url to connect to",
+          demandOption: true,
+        }),
+      handler: async (argv: Arguments) => {
+        const api = await (new SubstrateBuilder(argv.url)).build();
+        console.log(await api.currentBlock());
       },
     })
     .demandCommand()
     .parse();
 };
 
-main();
+main().then(() => Deno.exit(0)).catch(console.error);

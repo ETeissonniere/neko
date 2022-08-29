@@ -50,6 +50,10 @@ export class Substrate {
     return asNumber(decimals);
   }
 
+  public async currentBlock(): Promise<number> {
+    return asNumber(await this.api.query.system.number());
+  }
+
   public async fetchTransfers(
     startBlock: number,
     endBlock: number,
