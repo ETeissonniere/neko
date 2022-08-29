@@ -49,7 +49,6 @@ const main = async () => {
             t,
           ) => [t.block.toString(), t.from, t.to, t.amount.toString()]),
         ];
-        console.log(dump);
         await writeCSV(f, dump);
         f.close();
       },
