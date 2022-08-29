@@ -56,6 +56,7 @@ const main = () => {
         Deno.exit(0);
       },
     })
+    .demandCommand()
     .parse();
 };
 
