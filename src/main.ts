@@ -30,11 +30,23 @@ const main = async () => {
           type: "string",
           description: "output file",
           default: "./output.csv",
+        }).option("ignore", {
+          alias: "i",
+          type: "array",
+          description: "ignore addresses specified during the export",
         }),
       handler: async (argv: Arguments) => {
         const buffer: Array<TransferEvent> = [];
         const api = await (new SubstrateBuilder(argv.url)).build();
         await api.fetchTransfers(argv.start, argv.end, (_block, transfer) => {
+          if (argv.ignore && argv.ignore.includes(transfer.from)) {
+            return;
+          }
+
+          if (argv.ignore && argv.ignore.includes(transfer.to)) {
+            return;
+          }
+
           buffer.push(transfer);
         });
 
