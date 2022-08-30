@@ -1,8 +1,9 @@
 import yargs from "https://deno.land/x/yargs/deno.ts";
 import { Arguments } from "https://deno.land/x/yargs/deno-types.ts";
-import { writeCSV } from "https://deno.land/x/csv/mod.ts";
+import { readCSVRows, writeCSV } from "https://deno.land/x/csv/mod.ts";
 
 import { SubstrateBuilder, TransferEvent } from "./substrate.ts";
+import { Runtime } from "./runtime.ts";
 
 const main = async () => {
   await yargs(Deno.args)
@@ -80,6 +81,44 @@ const main = async () => {
       handler: async (argv: Arguments) => {
         const api = await (new SubstrateBuilder(argv.url)).build();
         console.log(await api.currentBlock());
+      },
+    })
+    .command({
+      command: "report",
+      describe:
+        "analyze the specified data file and output a report on the transfers",
+      // deno-lint-ignore no-explicit-any
+      builder: (y: any) =>
+        y.option("number", {
+          alias: "n",
+          type: "number",
+          description: "number of receiving and sending accounts to look for",
+          default: 5,
+        }),
+      handler: async (argv: Arguments) => {
+        const runtime = new Runtime();
+
+        let foundFirstRow = false;
+        const f = await Deno.open(argv.data, { read: true });
+        for await (const row of readCSVRows(f)) {
+          if (!foundFirstRow) {
+            foundFirstRow = true;
+            continue;
+          }
+
+          const [_block, from, to, amount] = row;
+          runtime.registerTransfer(from, to, parseFloat(amount));
+        }
+        f.close();
+
+        const highestReceivers = runtime.exportSorted(
+          argv.number,
+          (a, b) => b.received - a.received,
+        );
+        console.log("Highest Receivers:");
+        for (const [key, amount] of highestReceivers) {
+          console.log(`\t${key}: ${amount}`);
+        }
       },
     })
     .demandCommand()
