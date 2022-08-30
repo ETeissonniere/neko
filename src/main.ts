@@ -99,6 +99,9 @@ const main = async () => {
         const runtime = new Runtime();
 
         let foundFirstRow = false;
+        let blockStart = 0;
+        let blockEnd = 0;
+        let nbTransfers = 0;
         const f = await Deno.open(argv.data, { read: true });
         for await (const row of readCSVRows(f)) {
           if (!foundFirstRow) {
@@ -106,16 +109,24 @@ const main = async () => {
             continue;
           }
 
-          const [_block, from, to, amount] = row;
+          const [block, from, to, amount] = row;
           runtime.registerTransfer(from, to, parseFloat(amount));
+
+          if (blockStart === 0) {
+            blockStart = parseInt(block);
+          }
+          blockEnd = parseInt(block);
+          nbTransfers++;
         }
         f.close();
+
+        console.log(`Report on ${nbTransfers} transactions from blocks ${blockStart} to ${blockEnd}`);
 
         const highestReceivers = runtime.exportSorted(
           argv.number,
           (a, b) => b.received - a.received,
         );
-        console.log(`Top ${argv.number} Highest Receivers:`);
+        console.log(`\nTop ${argv.number} Highest Receivers:`);
         for (const [key, amount] of highestReceivers) {
           console.log(`\t${key}: ${amount}`);
         }
