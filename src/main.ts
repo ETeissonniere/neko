@@ -6,6 +6,11 @@ import { SubstrateBuilder, TransferEvent } from "./substrate.ts";
 
 const main = async () => {
   await yargs(Deno.args)
+    .option("data", {
+      type: "string",
+      description: "data file",
+      default: "./data.csv",
+    })
     .command({
       command: "fetch",
       describe:
@@ -25,11 +30,6 @@ const main = async () => {
           type: "number",
           description: "end block",
           demandOption: true,
-        }).option("output", {
-          alias: "o",
-          type: "string",
-          description: "output file",
-          default: "./output.csv",
         }).option("ignore", {
           alias: "i",
           type: "array",
@@ -50,7 +50,7 @@ const main = async () => {
           buffer.push(transfer);
         });
 
-        const f = await Deno.open(argv.output, {
+        const f = await Deno.open(argv.data, {
           write: true,
           create: true,
           truncate: true,
