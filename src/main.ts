@@ -115,8 +115,17 @@ const main = async () => {
           argv.number,
           (a, b) => b.received - a.received,
         );
-        console.log("Highest Receivers:");
+        console.log(`Top ${argv.number} Highest Receivers:`);
         for (const [key, amount] of highestReceivers) {
+          console.log(`\t${key}: ${amount}`);
+        }
+
+        const highestSenders = runtime.exportSorted(
+          argv.number,
+          (a, b) => b.sent - a.sent,
+        );
+        console.log(`\nTop ${argv.number} Highest Senders:`);
+        for (const [key, amount] of highestSenders) {
           console.log(`\t${key}: ${amount}`);
         }
       },
