@@ -120,7 +120,9 @@ const main = async () => {
         }
         f.close();
 
-        console.log(`Report on ${nbTransfers} transactions from blocks ${blockStart} to ${blockEnd}`);
+        console.log(
+          `Report on ${nbTransfers} transactions from blocks ${blockStart} to ${blockEnd}`,
+        );
 
         const highestReceivers = runtime.exportSorted(
           argv.number,
