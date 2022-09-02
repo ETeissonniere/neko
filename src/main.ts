@@ -2,7 +2,7 @@ import yargs from "https://deno.land/x/yargs/deno.ts";
 import { Arguments } from "https://deno.land/x/yargs/deno-types.ts";
 import { readCSVRows, writeCSV } from "https://deno.land/x/csv/mod.ts";
 
-import { SubstrateBuilder, TransferEvent } from "./substrate.ts";
+import { SubstrateBuilder, TransferEvent, NftTransferEvent } from "./substrate.ts";
 import { Runtime } from "./runtime.ts";
 
 const main = async () => {
@@ -39,7 +39,7 @@ const main = async () => {
       handler: async (argv: Arguments) => {
         const buffer: Array<TransferEvent> = [];
         const api = await (new SubstrateBuilder(argv.url)).build();
-        await api.fetchTransfers(argv.start, argv.end, (_block, transfer) => {
+        await api.fetchTransfers(argv.start, argv.end, (transfer) => {
           if (argv.ignore && argv.ignore.includes(transfer.from)) {
             return;
           }
@@ -64,6 +64,62 @@ const main = async () => {
         ];
         await writeCSV(f, dump);
         f.close();
+      },
+    })
+    .command({
+      command: "fetch-nfts",
+      describe:
+        "connect to a substrate chain and fetch NFTs received for the given keys",
+      // deno-lint-ignore no-explicit-any
+      builder: (y: any) =>
+        y.option("url", {
+          alias: "u",
+          type: "string",
+          description: "node url to connect to",
+          demandOption: true,
+        }).option("start", {
+          type: "number",
+          description: "start block",
+          demandOption: true,
+        }).option("end", {
+          type: "number",
+          description: "end block",
+          demandOption: true,
+        }).option("targets", {
+          alias: "t",
+          type: "array",
+          description: "addresses to look for",
+          demandOption: true,
+        }).option("collection", {
+          alias: "c",
+          type: "number",
+          description: "collection ID to filter for",
+          demandOption: true,
+        }),
+      handler: async (argv: Arguments) => {
+        const buffer: Array<NftTransferEvent> = [];
+        const api = await (new SubstrateBuilder(argv.url)).build();
+        await api.fetchNftTransfers(argv.start, argv.end, (transfer) => {
+          if (argv.targets.includes(transfer.to) && transfer.collection === argv.collection) {
+            buffer.push(transfer);
+          }
+        });
+
+        const f = await Deno.open(argv.data, {
+          write: true,
+          create: true,
+          truncate: true,
+        });
+        const dump = [
+          ["block", "from", "to", "collection", "item"],
+          ...buffer.map((
+            t,
+          ) => [t.block.toString(), t.from, t.to, t.collection.toString(), t.item.toString()]),
+        ];
+        await writeCSV(f, dump);
+        f.close();
+
+        console.log(buffer);
       },
     })
     .command({
