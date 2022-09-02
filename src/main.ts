@@ -98,10 +98,17 @@ const main = async () => {
         }),
       handler: async (argv: Arguments) => {
         const buffer: Array<NftTransferEvent> = [];
+        const counters: { [key: string]: number } = {};
         const api = await (new SubstrateBuilder(argv.url)).build();
         await api.fetchNftTransfers(argv.start, argv.end, (transfer) => {
           if (argv.targets.includes(transfer.to) && transfer.collection === argv.collection) {
             buffer.push(transfer);
+
+            if (counters[transfer.to] === undefined) {
+              counters[transfer.to] = 0;
+            }
+
+            counters[transfer.to]++;
           }
         });
 
@@ -119,7 +126,10 @@ const main = async () => {
         await writeCSV(f, dump);
         f.close();
 
-        console.log(buffer);
+        console.log(`Report from ${argv.start} until ${argv.end}`);
+        for (const key of Object.keys(counters)) {
+          console.log(`${key} received a total of ${counters[key]} items`);
+        }
       },
     })
     .command({
