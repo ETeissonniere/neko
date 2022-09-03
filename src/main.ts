@@ -69,7 +69,7 @@ const main = async () => {
     .command({
       command: "fetch-nfts",
       describe:
-        "connect to a substrate chain and fetch NFTs received for the given keys",
+        "connect to a substrate chain and fetch NFTs received and transferred for the given keys",
       // deno-lint-ignore no-explicit-any
       builder: (y: any) =>
         y.option("url", {
@@ -129,6 +129,46 @@ const main = async () => {
         console.log(`Report from ${argv.start} until ${argv.end}`);
         for (const key of Object.keys(counters)) {
           console.log(`${key} received a total of ${counters[key]} items`);
+        }
+      },
+    })
+    .command({
+      command: "diff-nfts",
+      describe:
+        "connect to a substrate chain and fetch NFTs received for the given keys and given timestamp",
+      // deno-lint-ignore no-explicit-any
+      builder: (y: any) =>
+        y.option("url", {
+          alias: "u",
+          type: "string",
+          description: "node url to connect to",
+          demandOption: true,
+        }).option("start", {
+          type: "number",
+          description: "start block",
+          demandOption: true,
+        }).option("end", {
+          type: "number",
+          description: "end block",
+          demandOption: true,
+        }).option("targets", {
+          alias: "t",
+          type: "array",
+          description: "addresses to look for",
+          demandOption: true,
+        }).option("collection", {
+          alias: "c",
+          type: "number",
+          description: "collection ID to filter for",
+          demandOption: true,
+        }),
+      handler: async (argv: Arguments) => {
+        console.log(`Report from ${argv.start} until ${argv.end}`);
+        const api = await (new SubstrateBuilder(argv.url)).build();
+        for (const target of argv.targets) {
+          const previously = await api.nbNftsAt(argv.start, argv.collection, target);
+          const now = await api.nbNftsAt(argv.end, argv.collection, target);
+          console.log(`${target} received a total of ${now - previously} new items`);
         }
       },
     })
