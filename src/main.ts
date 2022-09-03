@@ -2,7 +2,11 @@ import yargs from "https://deno.land/x/yargs/deno.ts";
 import { Arguments } from "https://deno.land/x/yargs/deno-types.ts";
 import { readCSVRows, writeCSV } from "https://deno.land/x/csv/mod.ts";
 
-import { SubstrateBuilder, TransferEvent, NftTransferEvent } from "./substrate.ts";
+import {
+  NftTransferEvent,
+  SubstrateBuilder,
+  TransferEvent,
+} from "./substrate.ts";
 import { Runtime } from "./runtime.ts";
 
 const main = async () => {
@@ -101,7 +105,10 @@ const main = async () => {
         const counters: { [key: string]: number } = {};
         const api = await (new SubstrateBuilder(argv.url)).build();
         await api.fetchNftTransfers(argv.start, argv.end, (transfer) => {
-          if (argv.targets.includes(transfer.to) && transfer.collection === argv.collection) {
+          if (
+            argv.targets.includes(transfer.to) &&
+            transfer.collection === argv.collection
+          ) {
             buffer.push(transfer);
 
             if (counters[transfer.to] === undefined) {
@@ -121,7 +128,13 @@ const main = async () => {
           ["block", "from", "to", "collection", "item"],
           ...buffer.map((
             t,
-          ) => [t.block.toString(), t.from, t.to, t.collection.toString(), t.item.toString()]),
+          ) => [
+            t.block.toString(),
+            t.from,
+            t.to,
+            t.collection.toString(),
+            t.item.toString(),
+          ]),
         ];
         await writeCSV(f, dump);
         f.close();
@@ -167,7 +180,11 @@ const main = async () => {
         let total = 0;
         const api = await (new SubstrateBuilder(argv.url)).build();
         for (const target of argv.targets) {
-          const previously = await api.nbNftsAt(argv.start, argv.collection, target);
+          const previously = await api.nbNftsAt(
+            argv.start,
+            argv.collection,
+            target,
+          );
           const now = await api.nbNftsAt(argv.end, argv.collection, target);
           const newItems = now - previously;
           total += newItems;

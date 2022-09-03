@@ -147,10 +147,17 @@ export class Substrate {
     }
   }
 
-  public async nbNftsAt(at: number, collection: number, target: string): Promise<number> {
+  public async nbNftsAt(
+    at: number,
+    collection: number,
+    target: string,
+  ): Promise<number> {
     const blockHash = await this.api.rpc.chain.getBlockHash(at);
     const api = await this.api.at(blockHash);
-    const storageKeys = await api.query.uniques.account.keys(target, collection);
+    const storageKeys = await api.query.uniques.account.keys(
+      target,
+      collection,
+    );
     return storageKeys.length;
   }
 }
