@@ -164,12 +164,16 @@ const main = async () => {
         }),
       handler: async (argv: Arguments) => {
         console.log(`Report from ${argv.start} until ${argv.end}`);
+        let total = 0;
         const api = await (new SubstrateBuilder(argv.url)).build();
         for (const target of argv.targets) {
           const previously = await api.nbNftsAt(argv.start, argv.collection, target);
           const now = await api.nbNftsAt(argv.end, argv.collection, target);
-          console.log(`${target} received a total of ${now - previously} new items`);
+          const newItems = now - previously;
+          total += newItems;
+          console.log(`${target} received a total of ${newItems} new items`);
         }
+        console.log(`Total: ${total}`);
       },
     })
     .command({
